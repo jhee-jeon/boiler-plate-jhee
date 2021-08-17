@@ -1,14 +1,44 @@
-const express = require('express')
-const app = express()
-const port = 5000
+const express = require("express");
+const app = express();
+const port = 5000;
+const bodyParser = require("body-parser");
 
-const mongoose = require('mongoose');
+//유저 정보 관리
+const { User } = require("./models/User");
 
-mongoose.connect('mongodb+srv://jhee:wjswogml127@cluster-jhee.yxdba.mongodb.net/myFirstDatabase?retryWrites=true&w=majority', {
-    useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false
-}).then(() => console.log("MongoDB Connected..."))
-    .catch(err => console.log(err))
+//mongoDB 관련 개인 정보를 보호하기 위해 넣는 과정
+const config = require("./config/key");
 
-app.get('/', (req, res) => res.send('Hello World!'))
+//application/x-www-form-urlendcoded
+app.use(bodyParser.urlencoded({ extended: true }));
 
-app.listen(port, () => console.log(`Example app listening on port ${port}!`))
+//application/json
+app.use(bodyParser.json());
+
+const mongoose = require("mongoose");
+mongoose
+  .connect(config.mongoURI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useCreateIndex: true,
+    useFindAndModify: false,
+  })
+  .then(() => console.log("MongoDB Connected..."))
+  .catch((err) => console.log(err));
+
+//기본 페이지
+app.get("/", (req, res) => res.send("기본 페이지입니다."));
+
+//회원가입 페이지
+app.post("/register", (req, res) => {
+  const user = new User(req.body);
+
+  user.save((err, doc) => {
+    if (err) return res.json({ success: false, err });
+    return res.status(200).json({
+      success: true,
+    });
+  });
+});
+
+app.listen(port, () => console.log(`Example app listening on port ${port}!`));
